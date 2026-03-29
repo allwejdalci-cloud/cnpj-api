@@ -4,7 +4,7 @@ const Redis = require("ioredis");
 
 const app = express();
 
-const redis = new Redis(process.env.REDIS_URL || "");
+let redis = null;
 
 // ==============================
 function limparCNPJ(cnpj) {
