@@ -61,8 +61,8 @@ app.get("/cnpj/:cnpj", async (req, res) => {
     const result = await consultar(req.params.cnpj);
     res.json(result);
   } catch (e) {
-    res.status(500).json({ erro: "falha" });
-  }
+      res.status(500).json({ erro: e.message });
+}
 });
 
 app.listen(3000, () => {
