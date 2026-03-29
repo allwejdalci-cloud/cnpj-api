@@ -35,7 +35,10 @@ async function consultar(cnpjRaw) {
   const cnpj = limparCNPJ(cnpjRaw);
   const cacheKey = `cnpj:${cnpj}`;
 
-  const cached = await redis.get(cacheKey);
+  let cached = null;
+  if (redis) {
+    cached = await redis.get(cacheKey);
+  }
   if (cached) return JSON.parse(cached);
 
   let data;
@@ -46,8 +49,9 @@ async function consultar(cnpjRaw) {
     data = await receitaWS(cnpj);
   }
 
-  await redis.set(cacheKey, JSON.stringify(data), "EX", 86400);
-
+  if (redis) {
+    await redis.set(cacheKey, JSON.stringify(data), "EX", 86400);
+  }
   return data;
 }
 
