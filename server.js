@@ -1,5 +1,6 @@
 const express = require("express");
-const fetch = require("node-fetch");
+// const fetch = require("node-fetch");
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const Redis = require("ioredis");
 
 const app = express();
