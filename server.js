@@ -117,10 +117,11 @@ async function consultar(cnpjRaw) {
 
   let data;
 
+  // 🔴 PRIORIDADE: ReceitaWS primeiro
   try {
-    data = await brasilAPI(cnpj);
-  } catch {
     data = await receitaWS(cnpj);
+  } catch {
+    data = await brasilAPI(cnpj);
   }
 
   if (redis) {
