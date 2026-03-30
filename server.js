@@ -64,6 +64,28 @@ function formatarTelefone(tel) {
 }
 
 // ==============================
+function debugEmails(data) {
+  const campos = {
+    email: data.email,
+    email_empresa: data.email_empresa,
+    correio_eletronico: data.correio_eletronico,
+    contato_email: data.contato_email,
+    mail: data.mail
+  };
+
+  const linhas = Object.entries(campos)
+    .map(([chave, valor]) => `${chave}: ${valor || ""}`)
+    .join("\n");
+
+  return [
+    "",
+    "==============================",
+    "DEBUG EMAIL",
+    linhas
+  ].join("\n");
+}
+
+// ==============================
 async function brasilAPI(cnpj) {
   const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
   if (!res.ok) throw new Error("BrasilAPI falhou");
@@ -109,28 +131,6 @@ async function consultar(cnpjRaw) {
 }
 
 // ==============================
-function debugEmails(data) {
-  const campos = {
-    email: data.email,
-    email_empresa: data.email_empresa,
-    correio_eletronico: data.correio_eletronico,
-    contato_email: data.contato_email,
-    mail: data.mail
-  };
-
-  const linhas = Object.entries(campos)
-    .map(([chave, valor]) => `${chave}: ${valor || ""}`)
-    .join("\n");
-
-  return [
-    "",
-    "==============================",
-    "DEBUG EMAIL",
-    linhas
-  ].join("\n");
-}
-// ==============================
-
 function formatarSaida(data) {
   const cnpj = data.cnpj || "";
   const cnpjMask = cnpj
@@ -141,30 +141,20 @@ function formatarSaida(data) {
   const fantasia = data.nome_fantasia || data.fantasia || "";
   const abertura = formatarData(data.data_inicio_atividade || data.abertura || "");
   const capital = formatarCapital(data.capital_social || "");
-  
-  // 📞 TELEFONE
+
   const telefoneRaw = data.ddd_telefone_1 || data.telefone || "";
   const telefone = formatarTelefone(telefoneRaw);
 
-// 📧 EMAIL (robusto + debug seguro)
-let email = "";
+  const emailRaw =
+    data.email ||
+    data.email_empresa ||
+    data.correio_eletronico ||
+    data.contato_email ||
+    data.mail ||
+    "";
 
-const candidatosEmail = [
-  data.email,
-  data.email_empresa,
-  data.correio_eletronico,
-  data.contato_email,
-  data.mail
-];
+  const email = emailRaw ? emailRaw.toLowerCase() : "";
 
-for (const e of candidatosEmail) {
-  if (e && typeof e === "string" && e.includes("@")) {
-    email = e.toLowerCase();
-    break;
-  }
-}
-
-  // 📍 ENDEREÇO
   const tipo = data.descricao_tipo_de_logradouro || data.tipo_logradouro || "";
   const logradouro = data.logradouro || "";
   const numero = data.numero || "";
@@ -183,7 +173,6 @@ for (const e of candidatosEmail) {
     cep
   ].filter(v => v && v !== "/").join(", ");
 
-  // 👥 SÓCIOS
   const sociosArray = data.qsa || data.socios || [];
   const socios = sociosArray
     .map(s => {
@@ -229,9 +218,9 @@ for (const e of candidatosEmail) {
     "",
     `CÓDIGO E DESCRIÇÃO DAS ATIVIDADES ECONÔMICAS SECUNDÁRIAS`,
     secundarias
-  ].join("\n").trim();
   ].join("\n").trim()
-  + debugEmails(data);}
+  + debugEmails(data);
+}
 
 // ==============================
 app.get("/cnpj/:cnpj", async (req, res) => {
