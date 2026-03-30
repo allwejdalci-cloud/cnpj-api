@@ -64,28 +64,6 @@ function formatarTelefone(tel) {
 }
 
 // ==============================
-function debugEmails(data) {
-  const campos = {
-    email: data.email,
-    email_empresa: data.email_empresa,
-    correio_eletronico: data.correio_eletronico,
-    contato_email: data.contato_email,
-    mail: data.mail
-  };
-
-  const linhas = Object.entries(campos)
-    .map(([chave, valor]) => `${chave}: ${valor || ""}`)
-    .join("\n");
-
-  return [
-    "",
-    "==============================",
-    "DEBUG EMAIL",
-    linhas
-  ].join("\n");
-}
-
-// ==============================
 async function brasilAPI(cnpj) {
   const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
   if (!res.ok) throw new Error("BrasilAPI falhou");
@@ -117,7 +95,7 @@ async function consultar(cnpjRaw) {
 
   let data;
 
-  // 🔴 PRIORIDADE: ReceitaWS primeiro
+  // 🔴 ReceitaWS primeiro
   try {
     data = await receitaWS(cnpj);
   } catch {
@@ -143,18 +121,9 @@ function formatarSaida(data) {
   const abertura = formatarData(data.data_inicio_atividade || data.abertura || "");
   const capital = formatarCapital(data.capital_social || "");
 
-  const telefoneRaw = data.ddd_telefone_1 || data.telefone || "";
-  const telefone = formatarTelefone(telefoneRaw);
+  const telefone = formatarTelefone(data.ddd_telefone_1 || data.telefone || "");
 
-  const emailRaw =
-    data.email ||
-    data.email_empresa ||
-    data.correio_eletronico ||
-    data.contato_email ||
-    data.mail ||
-    "";
-
-  const email = emailRaw ? emailRaw.toLowerCase() : "";
+  const email = (data.email || "").toLowerCase();
 
   const tipo = data.descricao_tipo_de_logradouro || data.tipo_logradouro || "";
   const logradouro = data.logradouro || "";
@@ -184,21 +153,27 @@ function formatarSaida(data) {
     .filter(Boolean)
     .join("\n");
 
-  const principal = data.cnae_fiscal && data.cnae_fiscal_descricao
-    ? `${formatarCNAE(data.cnae_fiscal)} - ${data.cnae_fiscal_descricao}`
-    : "";
+  // ✅ CNAE PRINCIPAL (ReceitaWS + BrasilAPI)
+  let principal = "";
+  if (data.atividade_principal && data.atividade_principal.length > 0) {
+    const p = data.atividade_principal[0];
+    principal = `${formatarCNAE(p.code)} - ${p.text}`;
+  } else if (data.cnae_fiscal && data.cnae_fiscal_descricao) {
+    principal = `${formatarCNAE(data.cnae_fiscal)} - ${data.cnae_fiscal_descricao}`;
+  }
 
-  const secundariasArray = data.cnaes_secundarios || [];
-  const secundarias = secundariasArray
-    .map(c => {
-      const codigo = c.codigo || c.code || "";
-      const descricao = c.descricao || c.text || "";
-      return codigo && descricao
-        ? `${formatarCNAE(codigo)} - ${descricao}`
-        : "";
-    })
-    .filter(Boolean)
-    .join("\n");
+  // ✅ CNAES SECUNDÁRIOS
+  let secundarias = "";
+
+  if (data.atividades_secundarias) {
+    secundarias = data.atividades_secundarias
+      .map(c => `${formatarCNAE(c.code)} - ${c.text}`)
+      .join("\n");
+  } else if (data.cnaes_secundarios) {
+    secundarias = data.cnaes_secundarios
+      .map(c => `${formatarCNAE(c.codigo)} - ${c.descricao}`)
+      .join("\n");
+  }
 
   return [
     telefone,
@@ -219,8 +194,7 @@ function formatarSaida(data) {
     "",
     `CÓDIGO E DESCRIÇÃO DAS ATIVIDADES ECONÔMICAS SECUNDÁRIAS`,
     secundarias
-  ].join("\n").trim()
-  + debugEmails(data);
+  ].join("\n").trim();
 }
 
 // ==============================
