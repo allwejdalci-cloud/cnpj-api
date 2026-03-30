@@ -143,15 +143,34 @@ function formatarSaida(data) {
     cep
   ].filter(v => v && v !== "/").join(", ");
 
-  const sociosArray = data.qsa || data.socios || [];
-  const socios = sociosArray
-    .map(s => {
-      const nomeSocio = s.nome_socio || s.nome || "";
-      const qual = s.qualificacao_socio || s.qualificacao || s.descricao || "";
-      return nomeSocio && qual ? `${nomeSocio}: ${qual}` : "";
-    })
-    .filter(Boolean)
-    .join("\n");
+// 👥 SÓCIOS (robusto definitivo)
+const sociosArray = data.qsa || data.socios || [];
+
+const socios = sociosArray
+  .map(s => {
+    const nomeSocio =
+      s.nome_socio ||
+      s.nome ||
+      s.nome_empresarial ||
+      "";
+
+    const qualificacao =
+      s.qual ||
+      s.qualificacao ||
+      s.qualificacao_socio ||
+      s.descricao ||
+      s.cargo ||
+      s.funcao ||
+      "";
+
+    if (!nomeSocio) return "";
+
+    return qualificacao
+      ? `${nomeSocio}: ${qualificacao}`
+      : nomeSocio;
+  })
+  .filter(Boolean)
+  .join("\n");
 
   // ✅ CNAE PRINCIPAL (ReceitaWS + BrasilAPI)
   let principal = "";
