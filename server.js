@@ -73,11 +73,19 @@ function formatarSaida(data) {
     .map(s => `${s.nome || s.nome_socio}: ${s.qual || s.qualificacao}`)
     .join("\n");
 
-  const principal = data.cnae_fiscal_descricao || "";
+  // ✅ CNAE principal com código + descrição
+  const principal = data.cnae_fiscal && data.cnae_fiscal_descricao
+    ? `${data.cnae_fiscal} - ${data.cnae_fiscal_descricao}`
+    : "";
 
+  // ✅ CNAEs secundários com código + descrição
   const secundariasArray = data.cnaes_secundarios || [];
   const secundarias = secundariasArray
-    .map(c => c.descricao || c.text)
+    .map(c => {
+      const codigo = c.codigo || c.code || "";
+      const descricao = c.descricao || c.text || "";
+      return codigo && descricao ? `${codigo} - ${descricao}` : "";
+    })
     .join("\n");
 
   return [
@@ -97,14 +105,20 @@ function formatarSaida(data) {
     secundarias
   ].join("\n").trim();
 }
+
+// ==============================
 app.get("/cnpj/:cnpj", async (req, res) => {
   try {
     const result = await consultar(req.params.cnpj);
     const formatado = formatarSaida(result);
+
+    // ✅ garante quebra de linha correta
+    res.set("Content-Type", "text/plain; charset=utf-8");
     res.send(formatado);
+
   } catch (e) {
-      res.status(500).json({ erro: e.message });
-}
+    res.status(500).json({ erro: e.message });
+  }
 });
 
 app.listen(3000, () => {
