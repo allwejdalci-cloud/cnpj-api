@@ -124,12 +124,16 @@ function formatarSaida(data) {
   const telefoneRaw = data.ddd_telefone_1 || data.telefone || "";
   const telefone = formatarTelefone(telefoneRaw);
 
-  // 📧 EMAIL
-  const email = data.email || "";
-  const emailUpper = email ? email.toUpperCase() : "";
-  const emailLower = email ? email.toLowerCase() : "";
+  // 📧 EMAIL (corrigido)
+  const emailRaw =
+    data.email ||
+    data.email_empresa ||
+    data.correio_eletronico ||
+    "";
 
-  // 📍 ENDEREÇO (corrigido)
+  const email = emailRaw ? emailRaw.toLowerCase() : "";
+
+  // 📍 ENDEREÇO
   const tipo = data.descricao_tipo_de_logradouro || data.tipo_logradouro || "";
   const logradouro = data.logradouro || "";
   const numero = data.numero || "";
@@ -148,7 +152,7 @@ function formatarSaida(data) {
     cep
   ].filter(v => v && v !== "/").join(", ");
 
-  // 👥 SÓCIOS (corrigido robusto)
+  // 👥 SÓCIOS
   const sociosArray = data.qsa || data.socios || [];
   const socios = sociosArray
     .map(s => {
@@ -159,12 +163,10 @@ function formatarSaida(data) {
     .filter(Boolean)
     .join("\n");
 
-  // CNAE principal
   const principal = data.cnae_fiscal && data.cnae_fiscal_descricao
     ? `${formatarCNAE(data.cnae_fiscal)} - ${data.cnae_fiscal_descricao}`
     : "";
 
-  // CNAEs secundários
   const secundariasArray = data.cnaes_secundarios || [];
   const secundarias = secundariasArray
     .map(c => {
@@ -179,8 +181,7 @@ function formatarSaida(data) {
 
   return [
     telefone,
-    emailUpper,
-    emailLower,
+    email,
     "",
     `${cnpjMask}  -  ${cnpj}`,
     nome,
