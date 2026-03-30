@@ -57,10 +57,51 @@ async function consultar(cnpjRaw) {
 }
 
 // ==============================
+function formatarSaida(data) {
+  const cnpj = data.cnpj || "";
+  const cnpjMask = cnpj
+    ? cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5")
+    : "";
+
+  const nome = data.razao_social || data.nome || "";
+  const fantasia = data.nome_fantasia || data.fantasia || "";
+  const abertura = data.data_inicio_atividade || data.abertura || "";
+  const capital = data.capital_social || "";
+
+  const sociosArray = data.qsa || data.socios || [];
+  const socios = sociosArray
+    .map(s => `${s.nome || s.nome_socio}: ${s.qual || s.qualificacao}`)
+    .join("\n");
+
+  const principal = data.cnae_fiscal_descricao || "";
+
+  const secundariasArray = data.cnaes_secundarios || [];
+  const secundarias = secundariasArray
+    .map(c => c.descricao || c.text)
+    .join("\n");
+
+  return [
+    "",
+    `${cnpjMask}  -  ${cnpj}`,
+    nome,
+    `Nome FANTASIA: ${fantasia}`,
+    `Data de Abertura: ${abertura}`,
+    "",
+    `CAPITAL SOCIAL: ${capital}`,
+    socios,
+    "",
+    `CÓDIGO E DESCRIÇÃO DA ATIVIDADE ECONÔMICA PRINCIPAL`,
+    principal,
+    "",
+    `CÓDIGO E DESCRIÇÃO DAS ATIVIDADES ECONÔMICAS SECUNDÁRIAS`,
+    secundarias
+  ].join("\n").trim();
+}
 app.get("/cnpj/:cnpj", async (req, res) => {
   try {
     const result = await consultar(req.params.cnpj);
-    res.json(result);
+    const formatado = formatarSaida(result);
+    res.send(formatado);
   } catch (e) {
       res.status(500).json({ erro: e.message });
 }
