@@ -124,14 +124,23 @@ function formatarSaida(data) {
   const telefoneRaw = data.ddd_telefone_1 || data.telefone || "";
   const telefone = formatarTelefone(telefoneRaw);
 
-  // 📧 EMAIL (corrigido)
-  const emailRaw =
-    data.email ||
-    data.email_empresa ||
-    data.correio_eletronico ||
-    "";
+// 📧 EMAIL (robusto + debug seguro)
+let email = "";
 
-  const email = emailRaw ? emailRaw.toLowerCase() : "";
+const candidatosEmail = [
+  data.email,
+  data.email_empresa,
+  data.correio_eletronico,
+  data.contato_email,
+  data.mail
+];
+
+for (const e of candidatosEmail) {
+  if (e && typeof e === "string" && e.includes("@")) {
+    email = e.toLowerCase();
+    break;
+  }
+}
 
   // 📍 ENDEREÇO
   const tipo = data.descricao_tipo_de_logradouro || data.tipo_logradouro || "";
