@@ -109,6 +109,28 @@ async function consultar(cnpjRaw) {
 }
 
 // ==============================
+function debugEmails(data) {
+  const campos = {
+    email: data.email,
+    email_empresa: data.email_empresa,
+    correio_eletronico: data.correio_eletronico,
+    contato_email: data.contato_email,
+    mail: data.mail
+  };
+
+  const linhas = Object.entries(campos)
+    .map(([chave, valor]) => `${chave}: ${valor || ""}`)
+    .join("\n");
+
+  return [
+    "",
+    "==============================",
+    "DEBUG EMAIL",
+    linhas
+  ].join("\n");
+}
+// ==============================
+
 function formatarSaida(data) {
   const cnpj = data.cnpj || "";
   const cnpjMask = cnpj
@@ -119,7 +141,7 @@ function formatarSaida(data) {
   const fantasia = data.nome_fantasia || data.fantasia || "";
   const abertura = formatarData(data.data_inicio_atividade || data.abertura || "");
   const capital = formatarCapital(data.capital_social || "");
-
+  
   // 📞 TELEFONE
   const telefoneRaw = data.ddd_telefone_1 || data.telefone || "";
   const telefone = formatarTelefone(telefoneRaw);
@@ -208,7 +230,8 @@ for (const e of candidatosEmail) {
     `CÓDIGO E DESCRIÇÃO DAS ATIVIDADES ECONÔMICAS SECUNDÁRIAS`,
     secundarias
   ].join("\n").trim();
-}
+  ].join("\n").trim()
+  + debugEmails(data);}
 
 // ==============================
 app.get("/cnpj/:cnpj", async (req, res) => {
