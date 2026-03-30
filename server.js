@@ -33,7 +33,10 @@ function formatarCapital(valor) {
 // ==============================
 function formatarCNAE(codigo) {
   if (!codigo) return "";
-  const c = codigo.replace(/\D/g, "").padStart(7, "0");
+
+  const str = String(codigo); // 👈 garante string
+  const c = str.replace(/\D/g, "").padStart(7, "0");
+
   return `${c.slice(0,2)}.${c.slice(2,4)}-${c.slice(4,5)}-${c.slice(5)}`;
 }
 
